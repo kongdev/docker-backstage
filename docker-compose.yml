@@ -1,0 +1,63 @@
+services:
+  postgres:
+    image: postgres:17.0-bookworm
+    environment:
+      - POSTGRES_USER=backstage
+      - POSTGRES_PASSWORD=backstage
+      - POSTGRES_DB=backstage
+    ports:
+      - "5443:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U backstage"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backstage
+
+  backend:
+    build:
+      context: .
+      dockerfile: packages/backend/Dockerfile
+    ports:
+      - "7007:7007"
+    environment:
+      - NODE_ENV=production
+      - NODE_OPTIONS=--no-node-snapshot
+      - BACKEND_SECRET=yyyy
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=backstage
+      - POSTGRES_PASSWORD=backstage
+      - POSTGRES_DB=backstage
+      - GITHUB_TOKEN=xxxx
+    volumes:
+      - ./app-config.yaml:/app/app-config.yaml
+      - ./app-config.docker.yaml:/app/app-config.docker.yaml
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - backstage
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - backend
+    networks:
+      - backstage
+
+volumes:
+  postgres_data:
+
+networks:
+  backstage:
+    driver: bridge
