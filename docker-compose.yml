@@ -2,7 +2,6 @@ services:
   postgres:
     image: postgres:17.0-bookworm
     container_name: backstage-postgres
-    restart: always
     environment:
       - POSTGRES_USER=backstage
       - POSTGRES_PASSWORD=backstage
@@ -24,7 +23,6 @@ services:
       context: .
       dockerfile: packages/backend/Dockerfile
     container_name: backstage-backend
-    restart: always
     ports:
       - "7007:7007"
     environment:
@@ -51,7 +49,6 @@ services:
       context: .
       dockerfile: Dockerfile.frontend
     container_name: backstage-frontend
-    restart: always
     ports:
       - "3000:80"
     environment:
